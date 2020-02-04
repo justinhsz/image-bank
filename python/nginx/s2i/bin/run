@@ -15,6 +15,7 @@ if [ ! -v NGINX_LOG_TO_VOLUME -a -v NGINX_LOG_PATH ]; then
     /bin/ln -s /dev/stderr ${NGINX_LOG_PATH}/error.log
 fi
 
+nginx -g "daemon off;" &
 
 # Python
 function is_gunicorn_installed() {
@@ -110,8 +111,7 @@ if is_gunicorn_installed; then
     echo "---> Serving application with gunicorn ($APP_MODULE) ..."
 
     # force enable nginx if gunicorn enabled.
-    gunicorn "$APP_MODULE" --bind=0.0.0.0:8081 --access-logfile=- --config "$APP_CONFIG" &
-    exec nginx -g "daemon off;"
+    exec gunicorn "$APP_MODULE" --bind=0.0.0.0:8081 --access-logfile=- --config "$APP_CONFIG"
   fi
 fi
 
@@ -120,7 +120,7 @@ if is_django_installed; then
     echo "---> Serving application with 'manage.py runserver' ..."
     echo "WARNING: this is NOT a recommended way to run you application in production!"
     echo "Consider using gunicorn or some other production web server."
-    maybe_run_in_init_wrapper python "$manage_file" runserver 0.0.0.0:8080
+    maybe_run_in_init_wrapper python "$manage_file" runserver 0.0.0.0:8081
   else
     echo "WARNING: seems that you're using Django, but we could not find a 'manage.py' file."
     echo "Skipped 'python manage.py runserver'."
