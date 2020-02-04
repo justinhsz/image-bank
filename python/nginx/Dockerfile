@@ -43,6 +43,7 @@ RUN INSTALL_PKGS="rh-python36 rh-python36-python-devel rh-python36-python-setupt
     yum install -y centos-release-scl && \
     yum -y --setopt=tsflags=nodocs install --enablerepo=centosplus $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
+    yum install -y https://archives.fedoraproject.org/pub/archive/fedora/linux/releases/21/Everything/x86_64/os/Packages/s/sqlite-3.8.7-1.fc21.x86_64.rpm && \
     # Remove centos-logos (httpd dependency) to keep image size smaller.
     rpm -e --nodeps centos-logos && \
     yum -y clean all --enablerepo='*' && \
