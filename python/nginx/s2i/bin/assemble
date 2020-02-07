@@ -88,6 +88,11 @@ if [[ ! -z "$UPGRADE_PIP_TO_LATEST" ]]; then
   pip install -U pip setuptools wheel
 fi
 
+# Install packages
+# To prevent git issue, add following variables:
+export GIT_COMMITTER_NAME='default'
+export GIT_COMMITTER_EMAIL='default@localhost.com'
+
 if [[ ! -z "$ENABLE_PIPENV" ]]; then
   install_pipenv
   echo "---> Installing dependencies via pipenv ..."
