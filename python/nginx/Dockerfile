@@ -34,8 +34,8 @@ LABEL summary="$SUMMARY" \
       com.redhat.component="python36-container" \
       name="centos/python-36-centos7" \
       version="1" \
-      usage="s2i build https://github.com/justinhsz/s2i-python-container.git --context-dir=3.6/test/setup-test-app/ centos/python-36-centos7 python-sample-app" \
-      maintainer="SoftwareCollections.org <sclorg@redhat.com>"
+      usage="docker build" \
+      maintainer="https://github.com/justinhsz"
 
 RUN INSTALL_PKGS="rh-python36 rh-python36-python-devel rh-python36-python-setuptools rh-python36-python-pip nss_wrapper \
         httpd24 httpd24-httpd-devel httpd24-mod_ssl httpd24-mod_auth_kerb httpd24-mod_ldap \
