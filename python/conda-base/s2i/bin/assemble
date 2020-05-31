@@ -1,0 +1,78 @@
+#!/bin/bash
+
+set -e
+
+echo "---> Installing application source"
+cp -Rf /tmp/src/. ./
+
+# Fix source directory permissions
+fix-permissions ./
+
+# Python Environment setup
+
+function is_django_installed() {
+  python -c "import django" &>/dev/null
+}
+
+function should_collectstatic() {
+  is_django_installed && [[ -z "$DISABLE_COLLECTSTATIC" ]]
+}
+
+shopt -s dotglob
+
+# set permissions for any installed artifacts
+fix-permissions /opt/app-root -P
+
+# Install packages
+# To prevent git issue, add following variables:
+# export GIT_COMMITTER_NAME='default'
+# export GIT_COMMITTER_EMAIL='default@localhost.com'
+
+if [[ -z "$TARGET_CONDA_ENV" ]]; then
+  echo "WARNING: could not found TARGET_CONDA_ENV, set it to 'default'"
+  export TARGET_CONDA_ENV=default
+fi
+
+echo "---> Installing dependencies ..."
+if [[ -f requirements.txt ]]; then
+  conda env create -n $TARGET_CONDA_ENV --file requirements.txt
+elif [[ -f environment.yml ]]; then
+  conda env create -n $TARGET_CONDA_ENV --file environment.yml
+else
+  echo "WARNING: could not found requirements.txt or environment.yml file."
+  echo " assume that you don't need to do the installation."
+  conda create -n $TARGET_CONDA_ENV
+fi
+
+echo "---> Activate $TARGET_CONDA_ENV environment"
+conda activate $TARGET_CONDA_ENV
+
+if should_collectstatic; then
+  (
+    echo "---> Collecting Django static files ..."
+
+    APP_HOME=$(readlink -f "${APP_HOME:-.}")
+    echo "APP_HOME: $APP_HOME"
+
+    # Look for 'manage.py' in the current directory
+    manage_file=./manage.py
+
+    if [[ ! -f "$manage_file" ]]; then
+      echo "WARNING: seems that you're using Django, but we could not find a 'manage.py' file."
+      echo "'manage.py collectstatic' ignored."
+      exit
+    fi
+
+    if ! python $manage_file collectstatic --dry-run --noinput &> /dev/null; then
+      echo "WARNING: could not run 'manage.py collectstatic'. To debug, run:"
+      echo "    $ python $manage_file collectstatic --noinput"
+      echo "Ignore this warning if you're not serving static files with Django."
+      exit
+    fi
+
+    python $manage_file collectstatic --noinput
+  )
+fi
+
+# set permissions for any installed artifacts
+fix-permissions /opt/app-root -P
