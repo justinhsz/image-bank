@@ -1,6 +1,5 @@
 # FROM centos:7
-# FROM centos/s2i-core-centos7
-FROM centos/s2i-core-centos7
+FROM centos/s2i-base-centos7
 
 EXPOSE 8080
 EXPOSE 8443
@@ -28,12 +27,8 @@ RUN /bin/bash -c "\
 
 USER 1001
 
-RUN /bin/bash -c "\
-    $CONDA_HOME/bin/conda init; \
-    touch ~/.condarc; \
-    chmod 777 ~/.condarc; \
-    "
+COPY .condarc $APP_ROOT/src/
 
-ENTRYPOINT bash
+# ENTRYPOINT bash
 
 # RUN "find $CONDA_HOME/lib/python*/site-packages/bokeh/server/static -follow -type f -name '*.js' ! -name '*.min.js' -delete"

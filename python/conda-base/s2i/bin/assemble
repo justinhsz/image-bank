@@ -8,6 +8,13 @@ cp -Rf /tmp/src/. ./
 # Fix source directory permissions
 fix-permissions ./
 
+# Identify conda command
+if ! hash gdate 2>/dev/null; then
+  echo "---> Initialing Conda command"
+  $CONDA_HOME/bin/conda init
+  source ~/.bashrc
+fi
+
 # Python Environment setup
 
 function is_django_installed() {
@@ -34,8 +41,8 @@ if [[ -z "$TARGET_CONDA_ENV" ]]; then
 fi
 
 echo "---> Installing dependencies ..."
-if [[ -f requirements.txt ]]; then
-  conda env create -n $TARGET_CONDA_ENV --file requirements.txt
+if [[ -f conda-requirements.txt ]]; then
+  conda env create -n $TARGET_CONDA_ENV --file conda-requirements.txt
 elif [[ -f environment.yml ]]; then
   conda env create -n $TARGET_CONDA_ENV --file environment.yml
 else
