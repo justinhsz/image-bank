@@ -9,7 +9,7 @@
 #
 # tar cf - <list of files and folders>
 pushd $CONDA_HOME >/dev/null
-if [ -d deps ]; then
+if [ -d envs/* ]; then
     # all deps contents to tar stream
     tar cf - envs/
 fi

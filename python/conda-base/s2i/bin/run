@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Globals:
+#   EXPOSE_PORT             The expose port. Default: 8080.
+#   DISABLE_COLLECTSTATIC   Django required variable.
 
 # source /opt/app-root/etc/generate_container_user
 
@@ -6,10 +10,11 @@ set -e
 
 source ~/.bashrc
 
-if [[ -z "$TARGET_CONDA_ENV" ]]; then
-  echo "WARNING: could not found TARGET_CONDA_ENV, set it to 'default'"
-  export TARGET_CONDA_ENV=default
+# Set expose port
+if [[ -z "$EXPOSE_PORT" ]]; then
+  export EXPOSE_PORT=8080
 fi
+echo "---> Set EXPOSE_PORT to $EXPOSE_PORT"
 
 echo "---> Activate $TARGET_CONDA_ENV environment"
 conda activate $TARGET_CONDA_ENV
@@ -108,7 +113,7 @@ if is_gunicorn_installed; then
     echo "---> Serving application with gunicorn ($APP_MODULE) ..."
 
     # force enable nginx if gunicorn enabled.
-    exec gunicorn "$APP_MODULE" --bind=0.0.0.0:8081 --access-logfile=- --config "$APP_CONFIG"
+    exec gunicorn "$APP_MODULE" --bind=0.0.0.0:$EXPOSE_PORT --access-logfile=- --config "$APP_CONFIG"
   fi
 fi
 
@@ -117,7 +122,7 @@ if is_django_installed; then
     echo "---> Serving application with 'manage.py runserver' ..."
     echo "WARNING: this is NOT a recommended way to run you application in production!"
     echo "Consider using gunicorn or some other production web server."
-    maybe_run_in_init_wrapper python "$manage_file" runserver 0.0.0.0:8081
+    maybe_run_in_init_wrapper python "$manage_file" runserver 0.0.0.0:$EXPOSE_PORT
   else
     echo "WARNING: seems that you're using Django, but we could not find a 'manage.py' file."
     echo "Skipped 'python manage.py runserver'."

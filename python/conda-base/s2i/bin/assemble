@@ -42,7 +42,7 @@ function should_collectstatic() {
 function create_or_update_conda_env() {
   local INPUT_DEPENDENCY_FILE=$1
 
-  if [[ -f $INPUT_DEPENDENCY_FILE ]]; then
+  if [[ ! -f $INPUT_DEPENDENCY_FILE ]]; then
     >&2 echo "ERROR: The file, '$INPUT_DEPENDENCY_FILE', is not exist."
     exit 1
   fi
@@ -53,7 +53,7 @@ function create_or_update_conda_env() {
 
   if [[ "$FILE_EXTENSION" == ".txt" ]]; then
     CONDA_ENV_SYMBOL=""
-  elif [[ "$FILE_EXTENSION" == ".yml"]]; then
+  elif [[ "$FILE_EXTENSION" == ".yml" ]]; then
     CONDA_ENV_SYMBOL="env"
   else
     >&2 echo "ERROR: The file extension, '$FILE_EXTENSION', is not supported. Please use '.txt' and '.yml' instead."
@@ -70,7 +70,7 @@ function create_or_update_conda_env() {
   conda $CONDA_ENV_SYMBOL $CONDA_INSTALL_ACTION -n $TARGET_CONDA_ENV --file $INPUT_DEPENDENCY_FILE
 
   # Clean up the installation.
-  conda -ay
+  conda clean -ay
 }
 
 shopt -s dotglob
@@ -85,7 +85,8 @@ fix-permissions /opt/app-root -P
 
 if [[ -z "$TARGET_CONDA_ENV" ]]; then
   echo "WARNING: could not found TARGET_CONDA_ENV, set it to 'default'"
-  export TARGET_CONDA_ENV=default
+  echo "export TARGET_CONDA_ENV=default" >> ~/.bashrc
+  source ~/.bashrc
 fi
 
 echo "---> Preparing the python enivronment's dependencies ..."

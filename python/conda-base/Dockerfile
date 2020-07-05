@@ -11,6 +11,8 @@ ENV CONDA_HOME=/opt/conda
 COPY ./s2i/bin/ $STI_SCRIPTS_PATH
 
 RUN /bin/bash -c "\
+    yum install -y centos-release-scl; \
+    yum -y --setopt=tsflags=nodocs install --enablerepo=centosplus nss_wrapper git; \
     curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh; \
     chmod 755 Miniconda3-latest-Linux-x86_64.sh; \
     ./Miniconda3-latest-Linux-x86_64.sh -b -p $CONDA_HOME; \
@@ -20,6 +22,9 @@ RUN /bin/bash -c "\
     # find $CONDA_HOME/ -follow -type f -name '*.a' -delete; \
     # find $CONDA_HOME/ -follow -type f -name '*.pyc' -delete; \
     # find $CONDA_HOME/ -follow -type f -name '*.js.map' -delete; \
+    rpm -e --nodeps centos-logos; \
+    yum -y clean all --enablerepo='*'; \
+    rm -rf /var/cache/yum; \
     chown -R 1001:0 ${APP_ROOT}; \
     fix-permissions ${APP_ROOT} -P; \
     rpm-file-permissions \
