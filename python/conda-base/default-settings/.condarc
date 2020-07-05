@@ -3,6 +3,7 @@ channels:
 
 show_channel_urls: true
 allow_other_channels: true
+auto_activate_base: false
 
 # proxy_servers:
 #   http: http://proxyserver:port
