@@ -8,3 +8,9 @@
 #	https://github.com/openshift/source-to-image/blob/master/docs/builder_image.md
 #
 # tar cf - <list of files and folders>
+pushd $CONDA_HOME >/dev/null
+if [ -d deps ]; then
+    # all deps contents to tar stream
+    tar cf - envs/
+fi
+popd >/dev/null

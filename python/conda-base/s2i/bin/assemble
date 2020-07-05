@@ -22,6 +22,13 @@ if ! hash conda 2>/dev/null; then
   source ~/.bashrc
 fi
 
+# Restore build artifacts: The previous conda environment.
+if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
+  echo "---> Restoring environments that we created before."
+  mv /tmp/artifacts/envs/* $CONDA_HOME/envs/
+  # ls -1 $CONDA_HOME/envs/ >> ~/.conda/environments.txt
+fi
+
 # Python Environment setup
 
 function is_django_installed() {
