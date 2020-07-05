@@ -1,4 +1,11 @@
 #!/bin/bash
+#
+# Globals:
+#   TARGET_CONDA_ENV        The environment name that you want to create. Default: 'default'.
+#   CONDA_DEPENDENCY_FILE   The dependency definition which exports from a conda environment.
+#                           Support these file extensions: '.txt' and '.yml'.
+#                           No default value, but the script will check 'environment.yml' and 'requirements.txt'.
+#   DISABLE_COLLECTSTATIC   Django required variable.
 
 set -e
 
@@ -9,7 +16,7 @@ cp -Rf /tmp/src/. ./
 fix-permissions ./
 
 # Identify conda command
-if ! hash gdate 2>/dev/null; then
+if ! hash conda 2>/dev/null; then
   echo "---> Initialing Conda command"
   $CONDA_HOME/bin/conda init
   source ~/.bashrc
@@ -23,6 +30,40 @@ function is_django_installed() {
 
 function should_collectstatic() {
   is_django_installed && [[ -z "$DISABLE_COLLECTSTATIC" ]]
+}
+
+function create_or_update_conda_env() {
+  local INPUT_DEPENDENCY_FILE=$1
+
+  if [[ -f $INPUT_DEPENDENCY_FILE ]]; then
+    >&2 echo "ERROR: The file, '$INPUT_DEPENDENCY_FILE', is not exist."
+    exit 1
+  fi
+
+  local FILE_EXTENSION="${INPUT_DEPENDENCY_FILE: -4}"
+  local CONDA_ENV_SYMBOL=""
+  local CONDA_INSTALL_ACTION="create"
+
+  if [[ "$FILE_EXTENSION" == ".txt" ]]; then
+    CONDA_ENV_SYMBOL=""
+  elif [[ "$FILE_EXTENSION" == ".yml"]]; then
+    CONDA_ENV_SYMBOL="env"
+  else
+    >&2 echo "ERROR: The file extension, '$FILE_EXTENSION', is not supported. Please use '.txt' and '.yml' instead."
+    exit 1
+  fi
+
+  if [[ -d "$CONDA_HOME/envs/$TARGET_CONDA_ENV" ]]; then
+    echo "Found existed conda environment: '$TARGET_CONDA_ENV', start to update the environment.''"
+    CONDA_INSTALL_ACTION="update"
+  fi
+
+  # Run conda env create/update command with specified dependency file.
+  echo "Start ${CONDA_INSTALL_ACTION::5}ing the environemnt '$TARGET_CONDA_ENV' with the specified dependency file '$INPUT_DEPENDENCY_FILE'."
+  conda $CONDA_ENV_SYMBOL $CONDA_INSTALL_ACTION -n $TARGET_CONDA_ENV --file $INPUT_DEPENDENCY_FILE
+
+  # Clean up the installation.
+  conda -ay
 }
 
 shopt -s dotglob
@@ -40,24 +81,23 @@ if [[ -z "$TARGET_CONDA_ENV" ]]; then
   export TARGET_CONDA_ENV=default
 fi
 
-echo "---> Installing dependencies ..."
-if [[ -f conda-requirements.txt ]]; then
-  conda env create -n $TARGET_CONDA_ENV --file conda-requirements.txt
-elif [[ -f environment.yml ]]; then
-  conda env create -n $TARGET_CONDA_ENV --file environment.yml
-else
-  echo "WARNING: could not found requirements.txt or environment.yml file."
-  echo " assume that you don't need to do the installation."
-  conda create -n $TARGET_CONDA_ENV
+echo "---> Preparing the python enivronment's dependencies ..."
+if [[ -z $CONDA_DEPENDENCY_FILE ]]; then
+  if [[ -f requirements.txt ]]; then
+    export CONDA_DEPENDENCY_FILE=requirements.txt
+  elif [[ -f environment.yml ]]; then
+    export CONDA_DEPENDENCY_FILE=environment.yml
+  fi
 fi
 
-echo "---> Activate $TARGET_CONDA_ENV environment"
-conda activate $TARGET_CONDA_ENV
+create_or_update_conda_env $CONDA_DEPENDENCY_FILE
 
 if should_collectstatic; then
   (
-    echo "---> Collecting Django static files ..."
+    echo "---> Activate $TARGET_CONDA_ENV environment"
+    conda activate $TARGET_CONDA_ENV
 
+    echo "---> Collecting Django static files ..."
     APP_HOME=$(readlink -f "${APP_HOME:-.}")
     echo "APP_HOME: $APP_HOME"
 
