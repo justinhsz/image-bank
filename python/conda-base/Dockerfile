@@ -27,7 +27,7 @@ RUN /bin/bash -c "\
 
 USER 1001
 
-COPY .condarc $APP_ROOT/src/
+COPY default-settings/ $APP_ROOT/src/
 
 # ENTRYPOINT bash
 
