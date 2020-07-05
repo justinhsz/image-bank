@@ -4,6 +4,8 @@
 
 set -e
 
+source ~/.bashrc
+
 if [[ -z "$TARGET_CONDA_ENV" ]]; then
   echo "WARNING: could not found TARGET_CONDA_ENV, set it to 'default'"
   export TARGET_CONDA_ENV=default
