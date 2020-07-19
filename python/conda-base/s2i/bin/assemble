@@ -6,14 +6,19 @@
 #                           Support these file extensions: '.txt' and '.yml'.
 #                           No default value, but the script will check 'environment.yml' and 'requirements.txt'.
 #   DISABLE_COLLECTSTATIC   Django required variable.
+#   ENABLE_DEVL_MODE        The mode only for local development. Set any value to enable the mode.
 
 set -e
 
-echo "---> Installing application source"
-cp -Rf /tmp/src/. ./
+if [[ -z "$ENABLE_DEVL_MODE" ]]; then
+  echo "---> Installing application source"
+  cp -Rf /tmp/src/. ./
 
-# Fix source directory permissions
-fix-permissions ./
+  # Fix source directory permissions
+  fix-permissions ./
+else
+  echo "Enabled development mode, skip copying source code."
+fi
 
 # Identify conda command
 if ! hash conda 2>/dev/null; then
@@ -75,9 +80,6 @@ function create_or_update_conda_env() {
 
 shopt -s dotglob
 
-# set permissions for any installed artifacts
-fix-permissions /opt/app-root -P
-
 # Install packages
 # To prevent git issue, add following variables:
 # export GIT_COMMITTER_NAME='default'
@@ -129,5 +131,7 @@ if should_collectstatic; then
   )
 fi
 
-# set permissions for any installed artifacts
-fix-permissions /opt/app-root -P
+if [[ -z "$ENABLE_DEVL_MODE" ]]; then
+  # set permissions for any installed artifacts
+  fix-permissions /opt/app-root -P
+fi
